@@ -45,7 +45,11 @@ List<String> recordIds = Lists.transform(records, new Function<Record, String> {
 });
 ```
 
-**Incidentally, here's that second snippet in JavaScript:**
+***
+
+# How about conciseness?
+
+Incidentally, here's that second snippet in JavaScript:
 
 ```javascript
 var recordIds = records.map(function(record) {
@@ -53,12 +57,17 @@ var recordIds = records.map(function(record) {
 });
 ```
 
-**Or better yet...**
+Or better yet:
 
 ```javascript
 var recordIds = records.pluck('recordId');
+```
 
-// super-advanced 'pluck' implementation
+*That's cheating! How would you implement `pluck`?*
+
+It's *really* complicated...
+
+```javascript
 function pluck(collection, property) {
   return collection.map(function(item) {
     return item[property];
@@ -92,7 +101,7 @@ getCustomer('1'); // Whoops! Compile error! Thanks, Java!
 
 # The cost of static typing
 
-Let's write some code for a service.
+This safety comes at a cost. To illustrate let's write some code for a service.
 
 We'll consider these approaches:
 
@@ -173,7 +182,8 @@ message CustomerInfoPB {
 }
 ```
 
-Plus this puts us back where we were with nowhere to put business logic.
+Plus this puts us back where we were with nowhere to put business logic (since
+we can't modify the generated `CustomerInfoPB` class).
 
 ***
 
@@ -194,6 +204,8 @@ class Customer {
   public CustomerInfoPB getInfo() {
     return this.info;
   }
+
+  // business logic goes here!
 }
 ```
 
@@ -221,6 +233,8 @@ var customer = service.getCustomer();
 customer.name; // => 'joe'
 ```
 
+Easy to read, easy to serialize, easy to add business logic.
+
 ***
 
 # The cost of dynamic typing
@@ -235,6 +249,8 @@ var service = {
 // Oh right, forgot to pass in id...
 service.getCustomer(); // => undefined
 ```
+
+We can make silly mistakes again. The horror!
 
 ***
 
@@ -315,6 +331,24 @@ This keeps things simple.
 
 ***
 
+# 1a. ...and all keys are strings
+
+If you want to see the keys of an object use `Object.keys`.
+
+```javascript
+var k1 = {},
+    k2 = {};
+
+var object = {
+  foo: 1,
+  bar: 2
+};
+
+Object.keys(object); // => ['foo', 'bar']
+```
+
+***
+
 # 1b. ...and everything is an object
 
 ```javascript
@@ -328,7 +362,13 @@ array['length']; // => 3
 
 That's right, even arrays are objects. Which means they're just maps.
 
-*Oh no, how inefficient!* Let's not get ahead of ourselves.
+```javascript
+Object.keys(array); // => ['0', '1', '2']
+```
+
+*Oh no, how inefficient!*
+
+Let's not get ahead of ourselves.
 
 I'll talk about performance in a moment.
 
@@ -366,7 +406,7 @@ Customer.prototype = DefaultCustomer;
 
 var joe = new Customer('joe');
 
-joe.name; // => 'joe'
+joe.name;      // => 'joe'
 joe.real_name; // => 'Real name unavailable';
 ```
 
@@ -411,7 +451,37 @@ With Java we need to explicitly accept dependencies in our code.
 
 Most of the time, this is just so that we can develop + test.
 
+***
+
+# 2b. Good for testing
+
 Dependency injection in JavaScript:
+
+```javascript
+// We don't necessarily need to accept explicit dependencies.
+// This allows us to keep our interface cleaner, if we want.
+function doSomething() {
+  return new Dependency().bar;
+}
+
+// In a test somewhere...
+Dependency.prototype.bar = 'blah';
+
+doSomething().should.eql('blah');
+```
+
+Oh yeah, and we were able to put that `should` method there because
+`Object.prototype` is exposed, just like everything else.
+
+***
+
+# 2b. Good for testing
+
+*But implicit dependencies are bad!* I hear you saying. Well, maybe. It's a
+trade-off: interface "noise" in exchange for explicitness.
+
+Here's the good news: we could also accept an explicit dependency in JavaScript
+and still have a lot less code to write than in Java:
 
 ```javascript
 function doSomething(dependency) {
@@ -422,12 +492,9 @@ function doSomething(dependency) {
 doSomething({ bar: 'blah' }).should.eql('blah');
 ```
 
-Oh yeah, and we were able to put that `should` method there because
-`Object.prototype` is exposed, just like everything else.
-
 ***
 
-## 2c. "Bad" for encapsulation
+# 2c. "Bad" for encapsulation
 
 There are no access modifiers (`private`, `protected`, etc.) in JavaScript.
 
@@ -448,7 +515,7 @@ Customer.prototype._dump = function() {
 
 ***
 
-## 2c. "Bad" for encapsulation?
+# 2c. "Bad" for encapsulation?
 
 ...but in fact, in JavaScript you can make something *truly* private if you
 want. I.e., there is no way to access it (unlike in Java, where you could always
