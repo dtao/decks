@@ -1,0 +1,13 @@
+{
+  "destination": {
+    "css": "source/stylesheets/lib",
+    "js": "source/javascripts/lib"
+  },
+
+  "dependencies": [
+    ["dtao/slidedown", ["slidedown.css", "slidedown.js"]],
+    ["chjj/marked", "lib/marked.js"],
+    ["http://yandex.st/highlightjs/8.0/", "highlight.min.js"],
+    ["isagalaev/highlight.js", "src/styles/solarized_dark.css"]
+  ]
+}

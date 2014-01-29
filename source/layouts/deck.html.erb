@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title><%= current_resource.data['title'] %></title>
+
+    <%= stylesheet_link_tag("deck") %>
+    <%= javascript_include_tag("deck") %>
+
+    <script>
+        Slidedown.fromXHR('../raw/<%= File.basename(current_resource.path, ".html") %>').to('#slides');
+    </script>
+</head>
+
+<body>
+    <div id="slides"></div>
+
+    <footer>
+        <%= link_to('Back to list', '..') %>
+    </footer>
+</body>
+
+</html>

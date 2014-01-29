@@ -1,3 +1,7 @@
+---
+title: JavaScript for the anti-JS crowd
+---
+
 JavaScript for the anti-JS crowd
 ================================
 
