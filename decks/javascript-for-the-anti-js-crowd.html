@@ -1,24 +1,1087 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
-<head>
+  <head>
+    <meta charset="utf-8">
+    
+    <!-- Always force latest IE rendering engine or request Chrome Frame -->
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    
+    <!-- Use title if it's in the page YAML frontmatter -->
     <title>JavaScript for the anti-JS crowd</title>
 
-    <link href="../stylesheets/deck.css" media="screen" rel="stylesheet" type="text/css" />
-    <script src="../javascripts/deck.js" type="text/javascript"></script>
+    <link href="http://fonts.googleapis.com/css?family=Hammersmith+One" media="screen" rel="stylesheet" type="text/css" />
+    <link href="../stylesheets/index.css" media="screen" rel="stylesheet" type="text/css" />
+  </head>
+  
+  <body class="decks decks_javascript-for-the-anti-js-crowd">
+    <h1 id="javascript-for-the-anti-js-crowd">JavaScript for the anti-JS crowd</h1>
 
-    <script>
-        Slidedown.fromXHR('../raw/javascript-for-the-anti-js-crowd').to('#slides');
-    </script>
-</head>
+<hr />
 
-<body>
-    <div id="slides"></div>
+<h1 id="lets-get-this-out-of-the-way-first">Let's get this out of the way first:</h1>
+<p>## What is JavaScript <em>bad</em> at?</p>
 
-    <footer>
-        <a href="..">Back to list</a>
-        <span>Deck made with <a href="https://github.com/dtao/slidedown">Slidedown</a></span>
-    </footer>
-</body>
+<hr />
 
+<h1 id="thats-easy">That's easy…</h1>
+
+<p>```javascript
+[5, 1, 10].sort();
+// =&gt; [1, 10, 5]</p>
+
+<p>{} + [];
+// =&gt; 0</p>
+
+<p>+((!+[]+!![]+!![]+!![]+[])+(!+[]+!![]+[]));
+// =&gt; 42
+```</p>
+
+<p>(Yes, that last one is for real.)</p>
+
+<hr />
+
+<h1 id="so-were-playing-that-game">So we're playing that game?</h1>
+<p>## OK then, what is <em>Java</em> bad at?</p>
+
+<hr />
+
+<h1 id="how-about-conciseness">How about conciseness?</h1>
+
+<p>```java
+// GUESS WHAT TYPE, COMPILER?
+Object object = new Object();</p>
+
+<p>// Java: "Hey, I can do functional programming too!"
+List<string> recordIds = Lists.transform(records, new Function&lt;Record, String&gt; {
+  @Override
+  public String apply(Record record) {
+    return record.getRecordId();
+  }
+});
+```</string></p>
+
+<hr />
+
+<h1 id="how-about-conciseness-1">How about conciseness?</h1>
+
+<p>Incidentally, here's that second snippet in JavaScript:</p>
+
+<p><code>javascript
+var recordIds = records.map(function(record) {
+  return record.recordId;
+});
+</code></p>
+
+<p>Or better yet:</p>
+
+<p><code>javascript
+var recordIds = records.pluck('recordId');
+</code></p>
+
+<p><em>That's cheating! How would you implement <code>pluck</code>?</em></p>
+
+<p>It's <em>really</em> complicated…</p>
+
+<p><code>javascript
+function pluck(collection, property) {
+  return collection.map(function(item) {
+    return item[property];
+  });
+}
+</code></p>
+
+<hr />
+
+<h1 id="who-cares-about-what-a-tool-is-bad-at">Who cares about what a tool is <em>bad</em> at?</h1>
+
+<ul>
+  <li>Tools generally have an intended purpose</li>
+  <li>Java prioritizes <em>safety</em></li>
+  <li>JavaScript prioritizes <em>productivity</em></li>
+</ul>
+
+<hr />
+
+<h1 id="the-value-of-static-typing">The value of static typing</h1>
+
+<p>Statically typed languages help us avoid silly bugs.</p>
+
+<p>```java
+private Customer getCustomer(int customerId) {
+  // logic to get customer
+}</p>
+
+<p>getCustomer('1'); // Whoops! Compile error! Thanks, Java!
+```</p>
+
+<hr />
+
+<h1 id="the-cost-of-static-typing">The cost of static typing</h1>
+
+<p>This safety comes at a cost. To illustrate let's write some code for a service.</p>
+
+<p>We'll consider these approaches:</p>
+
+<ul>
+  <li>Use maps and lists for everything</li>
+  <li>Write a POJO class for every type in the domain</li>
+  <li>Generate client libraries using a framework (e.g. protocol buffers)</li>
+  <li>Write wrappers around client libraries for additional functionality</li>
+</ul>
+
+<hr />
+
+<h1 id="use-maps-and-lists-for-everything">Use maps and lists for everything</h1>
+
+<p>This is a "bad" approach.</p>
+
+<p><code>java
+public Map&lt;String, Object&gt; getCustomer(int customerId) {
+  Map&lt;String, Object&gt; customer = Maps.newHashMap();
+  customer.put("id", 1);
+  customer.put("name", "joe");
+  customer.put("real_name", "Joe Schmoe");
+  customer.put("email_address", "joe.schmoe@example.com");
+  return customer;
+}
+</code></p>
+
+<p>Ugly, right?</p>
+
+<p>Plus, we have nowhere to put business logic.</p>
+
+<hr />
+
+<h1 id="write-a-pojo-class-for-every-type-in-the-domain">Write a POJO class for every type in the domain</h1>
+
+<p>```java
+class Customer {
+  private String name;</p>
+
+<p>public String getName() {
+    return this.name;
+  }</p>
+
+<p>public void setName(String name) {
+    this.name = name;
+  }</p>
+
+<p>// etc., etc.
+}
+```</p>
+
+<p>I guess this is better?</p>
+
+<p>At least we have type checking on the customer's properties now. Also, we can
+add business logic to this class.</p>
+
+<p>But that's a lot of boilerplate. Also, for serializing we may want to convert
+this to a map anyway…</p>
+
+<p>Yeah, for certain formats would could just use a library (e.g., Gson for JSON).
+But then that's another dependency. But oh well.</p>
+
+<hr />
+
+<h1 id="generate-client-libraries-using-a-framework">Generate client libraries using a framework</h1>
+
+<p>This is great! This way we'll have code generated <em>for</em> us, saving on
+boilerplate!</p>
+
+<p>Right?</p>
+
+<p>Oh wait…</p>
+
+<p><code>protobuf
+message CustomerInfoPB {
+  optional int64 id = 1;
+  optional string name = 2;
+  optional string real_name = 3;
+  optional string email_address = 3;
+}
+</code></p>
+
+<p>Plus this puts us back where we were with nowhere to put business logic (since
+we can't modify the generated <code>CustomerInfoPB</code> class).</p>
+
+<hr />
+
+<h1 id="write-wrappers-around-client-libraries-for-additional-functionality">Write wrappers around client libraries for additional functionality</h1>
+
+<p>Ah, <em>this</em> is the holy grail. We get serialization support through the
+auto-generated client library, and we can add business logic to our wrapper
+classes.</p>
+
+<p>```java
+class Customer {
+  private CustomerInfoPB info;</p>
+
+<p>public Customer(CustomerInfoPB) {
+    this.info = info;
+  }</p>
+
+<p>public CustomerInfoPB getInfo() {
+    return this.info;
+  }</p>
+
+<p>// business logic goes here!
+}
+```</p>
+
+<p><strong>Notice that as the solution gets "better" we have more and more code and more
+dependencies.</strong></p>
+
+<hr />
+
+<h1 id="the-value-of-dynamic-typing">The value of dynamic typing</h1>
+
+<p>```javascript
+var service = {
+  getCustomer: function() {
+    return {
+      id: 1,
+      name: 'joe',
+      real_name: 'Joe Schmoe',
+      email_address: 'joe@example.com'
+    };
+  }
+};</p>
+
+<p>// Look ma, no classes!
+var customer = service.getCustomer();
+customer.name; // =&gt; 'joe'
+```</p>
+
+<p>Easy to read, easy to serialize, easy to add business logic.</p>
+
+<hr />
+
+<h1 id="the-cost-of-dynamic-typing">The cost of dynamic typing</h1>
+
+<p>```javascript
+var service = {
+  getCustomer: function(id) {
+    return customers[id];
+  }
+};</p>
+
+<p>// Oh right, forgot to pass in id…
+service.getCustomer(); // =&gt; undefined
+```</p>
+
+<p>We can make silly mistakes again. The horror!</p>
+
+<hr />
+
+<h1 id="it-isnt-black-and-white-is-all-im-saying">It isn't black and white is all I'm saying</h1>
+<p>## There are trade-offs involved here</p>
+
+<hr />
+
+<h1 id="ok-lets-get-into-the-basics">OK, let's get into the basics</h1>
+
+<hr />
+
+<h1 id="javascript-is-not-java">JavaScript is not Java</h1>
+
+<ol>
+  <li>Every object is a map
+    <ul>
+      <li>And all keys are strings</li>
+      <li>And everything is an object</li>
+    </ul>
+  </li>
+  <li>Prototypes, not classes
+    <ul>
+      <li>Good for hacking</li>
+      <li>Good for testing</li>
+      <li>"Bad" for encapsulation</li>
+    </ul>
+  </li>
+  <li>Functions are the only way to introduce scope
+    <ul>
+      <li>Closures</li>
+      <li>The most common mistake</li>
+      <li>IIFEs</li>
+    </ul>
+  </li>
+  <li>All the code you write runs on one thread
+    <ul>
+      <li>The event loop</li>
+      <li>Concurrent vs. asynchronous programming</li>
+    </ul>
+  </li>
+  <li>Binding functions to objects
+    <ul>
+      <li>Avoid <code>this</code> when you're starting out</li>
+      <li>The <code>new</code> keyword</li>
+      <li><code>call</code> and <code>apply</code></li>
+    </ul>
+  </li>
+</ol>
+
+<hr />
+
+<h1 id="every-object-is-a-map">1. Every object is a map</h1>
+
+<p>```javascript
+var object = { foo: 1 };</p>
+
+<p>object.foo    // =&gt; 1
+object['foo'] // =&gt; 1</p>
+
+<p>object.bar = function() { return 2; };</p>
+
+<p>typeof object.bar; // 'function'
+object.bar();      // =&gt; 2
+object<a href="">'bar'</a>;   // =&gt; 2
+```</p>
+
+<p>Every property access is a lookup. Dot (<code>object.foo</code>) and bracket notation
+(<code>object['foo']</code>) are identical.</p>
+
+<hr />
+
+<h1 id="a-and-all-keys-are-strings">1a. …and all keys are strings</h1>
+
+<p>"You can't use an object as a key in a JavaScript map!"</p>
+
+<p>```javascript
+var object = {},
+    k1     = {},
+    k2     = {};</p>
+
+<p>object[k1] = 'foo';
+object[k2] = 'bar';</p>
+
+<p>JSON.stringify(object); // =&gt; '{"[object Object]":"bar"}'
+```</p>
+
+<p>Keys are coerced to strings. So everything is like a <code>Map&lt;String, Object&gt;</code>.</p>
+
+<p>This keeps things simple.</p>
+
+<hr />
+
+<h1 id="a-and-all-keys-are-strings-1">1a. …and all keys are strings</h1>
+
+<p>If you want to see the keys of an object use <code>Object.keys</code>.</p>
+
+<p>```javascript
+var k1 = {},
+    k2 = {};</p>
+
+<p>var object = {
+  foo: 1,
+  bar: 2
+};</p>
+
+<p>Object.keys(object); // =&gt; ['foo', 'bar']
+```</p>
+
+<hr />
+
+<h1 id="b-and-everything-is-an-object">1b. …and everything is an object</h1>
+
+<p>```javascript
+var array = [1, 2, 3];</p>
+
+<p>array[0];        // =&gt; 1
+array.length;    // =&gt; 3
+array['0'];      // =&gt; 1
+array['length']; // =&gt; 3
+```</p>
+
+<p>That's right, even arrays are objects. Which means they're just maps.</p>
+
+<p><code>javascript
+Object.keys(array); // =&gt; ['0', '1', '2']
+</code></p>
+
+<p><em>Oh no, how inefficient!</em></p>
+
+<p>Let's not get ahead of ourselves.</p>
+
+<p>I'll talk about performance in a moment.</p>
+
+<p>By the way, functions are objects too.</p>
+
+<p>```javascript
+function foo() {}</p>
+
+<p>foo.name;    // =&gt; 'foo'
+foo['name']; // =&gt; 'foo'
+```</p>
+
+<hr />
+
+<h1 id="prototypes-not-classes">2. Prototypes, not classes</h1>
+
+<p>JavaScript doesn't have classes. It isn't object-oriented. It's <em>prototypal</em>.</p>
+
+<p>What does this mean? Objects inherit from other objects.</p>
+
+<p>```javascript
+// This is called a constructor function.
+function Customer(name) {
+  if (name) { this.name = name; }
+}</p>
+
+<p>// Notice: this is just an ordinary object…
+var DefaultCustomer = {
+  name: 'Name unavailable',
+  real_name: 'Real name unavailable'
+};</p>
+
+<p>// …and yet we're inheriting from it.
+Customer.prototype = DefaultCustomer;</p>
+
+<p>var joe = new Customer('joe');</p>
+
+<p>joe.name;      // =&gt; 'joe'
+joe.real_name; // =&gt; 'Real name unavailable';
+```</p>
+
+<hr />
+
+<h1 id="a-good-for-hacking">2a. Good for hacking</h1>
+
+<p>Remember:</p>
+
+<ol>
+  <li>Objects "inherit" from other objects (prototypes)</li>
+  <li>You can modify any object</li>
+</ol>
+
+<p>So…</p>
+
+<p>```javascript
+String.prototype.shout = function() {
+  return this + '!';
+};</p>
+
+<p>'foo'.shout(); // =&gt; 'foo!'
+```</p>
+
+<p>Yes, you can modify built-in objects by changing their prototypes.</p>
+
+<hr />
+
+<h1 id="b-good-for-testing">2b. Good for testing</h1>
+
+<p>Dependency injection in Java:</p>
+
+<p>```java
+public String foo(BaseClass dependency) {
+  return dependency.getBar();
+}</p>
+
+<p>class TestBaseClass extends BaseClass {
+  // UGH
+}
+```</p>
+
+<p>With Java we need to explicitly accept dependencies in our code.</p>
+
+<p>Most of the time, this is just so that we can develop + test.</p>
+
+<hr />
+
+<h1 id="b-good-for-testing-1">2b. Good for testing</h1>
+
+<p>Dependency injection in JavaScript:</p>
+
+<p>```javascript
+// We don't necessarily need to accept explicit dependencies.
+// This allows us to keep our interface cleaner, if we want.
+function doSomething() {
+  return new Dependency().bar;
+}</p>
+
+<p>// In a test somewhere…
+Dependency.prototype.bar = 'blah';</p>
+
+<p>doSomething().should.eql('blah');
+```</p>
+
+<p>Oh yeah, and we were able to put that <code>should</code> method there because
+<code>Object.prototype</code> is exposed, just like everything else.</p>
+
+<hr />
+
+<h1 id="b-good-for-testing-2">2b. Good for testing</h1>
+
+<p><em>But implicit dependencies are bad!</em> I hear you saying. Well, maybe. It's a
+trade-off: interface "noise" in exchange for explicitness.</p>
+
+<p>Here's the good news: we could also accept an explicit dependency in JavaScript
+and still have a lot less code to write than in Java:</p>
+
+<p>```javascript
+function doSomething(dependency) {
+  return dependency.bar;
+}</p>
+
+<p>// In a test somewhere…
+doSomething({ bar: 'blah' }).should.eql('blah');
+```</p>
+
+<hr />
+
+<h1 id="c-bad-for-encapsulation">2c. "Bad" for encapsulation</h1>
+
+<p>There are no access modifiers (<code>private</code>, <code>protected</code>, etc.) in JavaScript.</p>
+
+<p>The common idiom is to use some sort of naming convention to distinguish
+"private" from "public" parts of an interface.</p>
+
+<p>```javascript
+// "public"
+Customer.prototype.fullName = function() {
+  return this.firstName + ' ' + this.lastName;
+};</p>
+
+<p>// "private" (but not really)
+Customer.prototype._dump = function() {
+  console.dir(this);
+};
+```</p>
+
+<hr />
+
+<h1 id="c-bad-for-encapsulation-1">2c. "Bad" for encapsulation?</h1>
+
+<p>…but in fact, in JavaScript you can make something <em>truly</em> private if you
+want. I.e., there is no way to access it (unlike in Java, where you could always
+use reflection).</p>
+
+<p><code>javascript
+// Here the Customer function creates a closure, which captures the local 'name'
+// variable and offers no mechanism for accessing it outside this scope.
+function Customer(name) {
+  this.getName = function() {
+    return name;
+  };
+};
+</code></p>
+
+<p>Don't worry; I'm about to talk about closures!</p>
+
+<hr />
+
+<h1 id="functions-are-the-only-way-to-introduce-scope">3. Functions are the only way to introduce scope</h1>
+
+<p>In Java you might write something like this.</p>
+
+<p>```java
+for (int i = 1; i &lt;= 10; i++) {
+  String foo = "blah-" + i;
+}</p>
+
+<p>String bar = foo; // compile error: 'foo cannot be resolved to a variable'
+```</p>
+
+<p>The <code>for</code> loop above introduces lexical scope. The <code>foo</code> variable is defined
+within the loop, and is not visible outside it.</p>
+
+<p>In JavaScript, not so:</p>
+
+<p>```javascript
+for (var i = 0; i &lt; 10; i++) {
+  var foo = 'blah-' + i;
+}</p>
+
+<p>// foo is visible outside the loop!
+var bar = foo; // =&gt; 'blah-10'
+```</p>
+
+<p>The <code>for</code> keyword does not introduce scope in JavaScript. Neither do <code>do</code>,
+<code>while</code>, <code>try</code>, etc.</p>
+
+<p>The <strong>only</strong> way to introduce scope in JavaScript (pre-ES6) is to declare a
+function.</p>
+
+<hr />
+
+<h1 id="a-closures">3a. Closures</h1>
+
+<p>A <em>closure</em> is a function that "closes over" variables potentially declared in
+an external scope.</p>
+
+<p>```javascript
+var counter = 1;</p>
+
+<p>var increment = function() {
+  return counter++;
+};</p>
+
+<p>increment();     // =&gt; 1
+increment();     // =&gt; 2
+var x = counter; // =&gt; 3
+```</p>
+
+<p>The <code>counter</code> variable is <em>closed over</em> by the <code>increment</code> function in the above
+example.</p>
+
+<hr />
+
+<h1 id="b-the-most-common-mistake">3b. The most common mistake</h1>
+
+<p><code>javascript
+for (var i = 0; i &lt; 3; i++) {
+  // The setTimeout function executes some code
+  // after the specified number of milliseconds
+  setTimeout(function() {
+    console.log('testing: ' + i);
+  }, 10);
+}
+</code></p>
+
+<p>The above outputs:</p>
+
+<pre><code>3
+3
+3
+</code></pre>
+
+<p>Why?</p>
+
+<hr />
+
+<h1 id="b-the-most-common-mistake-1">3b. The most common mistake</h1>
+
+<p>Remember: <em>the <code>for</code> keyword does not introduce scope</em>. Which means:</p>
+
+<p>```javascript
+var closures = [];</p>
+
+<p>for (var i = 0; i &lt; 3; i++) {
+  closures.push(function() {
+    return i;
+  });
+}</p>
+
+<p>// All closures have closed over the same i variable,
+// which now has a value of 3.
+closures<a href="">0</a>; // =&gt; 3
+closures<a href="">1</a>; // =&gt; 3
+closures<a href="">2</a>; // =&gt; 3
+```</p>
+
+<hr />
+
+<h1 id="b-the-most-common-mistake-2">3b. The most common mistake</h1>
+
+<p>The solution: <strong>create</strong> a new scope using a function.</p>
+
+<p>```javascript
+var closures = [];</p>
+
+<p>for (var i = 0; i &lt; 3; i++) {
+  (function(x) {
+    closures.push(function() {
+      return x;
+    });
+  }(i));
+}</p>
+
+<p>// Each closure closed over a different variable x
+closures<a href="">0</a>; // =&gt; 0
+closures<a href="">1</a>; // =&gt; 1
+closures<a href="">2</a>; // =&gt; 2
+```</p>
+
+<hr />
+
+<h1 id="c-iifes">3c. IIFEs</h1>
+
+<p>Wait, what was that thing we just saw?</p>
+
+<p>```javascript
+(function(x) {</p>
+
+<p>// Whatever i was externally, at the moment this function was defined,
+  // has been assigned to our very own x variable internally.</p>
+
+<p>}(i));
+```</p>
+
+<p>This is called an <strong>IIFE</strong>: an <em>immediately executed function expression</em>.</p>
+
+<p>It is an idiomatic way of introducing scope in JavaScript.</p>
+
+<p>No big deal.</p>
+
+<hr />
+
+<h1 id="all-the-code-you-write-runs-on-one-thread">4. All the code you write runs on one thread</h1>
+
+<p>You may have heard, "JavaScript is single-threaded."</p>
+
+<p>You may have thought, "So it isn't suitable for high-performance scenarios."</p>
+
+<p>That would be wrong.</p>
+
+<hr />
+
+<h1 id="all-the-code-you-write-runs-on-one-thread-1">4. All the code you <strong>write</strong> runs on one thread</h1>
+
+<p>First of all, this <strong>doesn't</strong> mean "no way to parallelize work." It <strong>does</strong>
+mean "no concurrency bugs."</p>
+
+<p><code>javascript
+if (!this.instance) {
+  this.instance = new Whatever();
+}
+</code></p>
+
+<p>The above code does not contain a race condition. It will always work the way
+you expect.</p>
+
+<hr />
+
+<h1 id="a-the-event-loop">4a. The event loop</h1>
+
+<p><img alt="The event loop" src="http://misclassblog.com/wp-content/uploads/2013/04/event-loop.jpg" /></p>
+
+<p>All the code you write get executed as part of the event loop.</p>
+
+<p>When you call <code>setTimeout</code>, it places an event on the queue.</p>
+
+<p>When you make a network request, the response adds an event to the queue.</p>
+
+<p>Your code doesn't need to think about synchronizing anything.</p>
+
+<hr />
+
+<h1 id="b-concurrent-vs-asynchronous-programming">4b. Concurrent vs. asynchronous programming</h1>
+
+<p>How often do you think the CPU is the bottleneck in a software application?</p>
+
+<p><img alt="The CPU is never the bottleneck" src="http://misclassblog.com/wp-content/uploads/2013/04/IO-Chart2.jpg" /></p>
+
+<p>… basically never.</p>
+
+<hr />
+
+<h1 id="b-concurrent-vs-asynchronous-programming-1">4b. Concurrent vs. asynchronous programming</h1>
+
+<p>So in Java (and many other languages) we have <em>threads</em>. This lets us write
+synchronous (blocking) functions that wait a long time.</p>
+
+<p>```java
+// This might block for a while…
+DbResult result = queryDbForResult();</p>
+
+<p>// …so this could happen much later.
+return renderHtmlResponse(result);
+```</p>
+
+<hr />
+
+<h1 id="b-concurrent-vs-asynchronous-programming-2">4b. Concurrent vs. asynchronous programming</h1>
+
+<p>The alternative would be kinda gross:</p>
+
+<p>```java
+queryDbForResult(new DbResultToHtmlRenderer(this.responseWriter));</p>
+
+<p>// …somewhere else in the code…
+class DbResultToHtmlRenderer {
+  private PrintWriter writer;</p>
+
+<p>public DbResultToHtmlRenderer(PrintWriter writer) {
+    this.writer = writer;
+  }</p>
+
+<p>public void handleDbResult(DbResult result) {
+    String htmlResponse = renderHtmlResponse(result);
+    writer.write(htmlResponse);
+  }</p>
+
+<p>// …
+}
+```</p>
+
+<hr />
+
+<h1 id="b-concurrent-vs-asynchronous-programming-3">4b. Concurrent vs. asynchronous programming</h1>
+
+<p>Pretty bad, right? Let's look at something similar in JavaScript:</p>
+
+<p><code>javascript
+queryDbForResult(function(result) {
+  writer.renderHtmlResponse(result);
+});
+</code></p>
+
+<p>In the JavaScript world, asynchronous operations are handled with <em>callbacks</em>.
+This is the idiomatic way to do it, and it's not hard. And it doesn't require
+any concurrency mechanisms.</p>
+
+<blockquote>
+  <p>When all you have are threads, everything starts to look like a concurrency
+problem.<br />
+-me</p>
+</blockquote>
+
+<hr />
+
+<h1 id="b-concurrent-vs-asynchronous-programming-4">4b. Concurrent vs. asynchronous programming</h1>
+
+<p>Why create a thread whose primary responsibility is to <em>wait</em> for something?</p>
+
+<p><img alt="Using threads to wait" src="http://www.projectation.com/wp-content/uploads/2012/11/square.peg_.round_.hole_.jpg" /></p>
+
+<p>Square peg, round hole.</p>
+
+<hr />
+
+<h1 id="binding-functions-to-objects">5. Binding functions to objects</h1>
+
+<p>JavaScript binding is admittedly pretty weird.</p>
+
+<ul>
+  <li>At some random point in your code, <code>this</code> actually refers to the <em>global
+object</em> (<code>window</code> in browser environments)</li>
+  <li>When creating objects using the <code>new</code> keyword, <code>this</code> refers to the
+constructed object</li>
+  <li>When calling methods while dereferencing, <code>this</code> refers to the parent object</li>
+</ul>
+
+<hr />
+
+<h1 id="binding-functions-to-objects-1">5. Binding functions to objects</h1>
+
+<p>Normally, <code>this</code> is just the global object.</p>
+
+<p><code>html
+&lt;script&gt;
+  typeof this.alert;   // =&gt; 'function'
+  typeof this.console; // =&gt; 'object'
+&lt;/script&gt;
+</code></p>
+
+<p>…which means that if you modify <code>this</code>, you're screwing with global state.</p>
+
+<p>```javascript
+function setName(value) {
+  this.name = value;
+}</p>
+
+<p>setName('foo');</p>
+
+<p>window.name; // =&gt; 'foo'
+```</p>
+
+<hr />
+
+<h1 id="binding-functions-to-objects-2">5. Binding functions to objects</h1>
+
+<p>When you use the <code>new</code> keyword, then <code>this</code> refers to the object being
+constructed.</p>
+
+<p>```javascript
+function Person(name) {
+  this.name = name;
+}</p>
+
+<p>var p = new Person('Dan');</p>
+
+<p>p.name;      // =&gt; 'Dan'
+window.name; // =&gt; undefined
+```</p>
+
+<hr />
+
+<h1 id="binding-functions-to-objects-3">5. Binding functions to objects</h1>
+
+<p>However, if you <em>forget</em> the <code>new</code> keyword, then <code>this</code> is still the global
+object.</p>
+
+<p>```javascript
+var p = Person('Dan');</p>
+
+<p>p;           // =&gt; undefined (because Person doesn't return anything)
+window.name; // =&gt; 'Dan'
+```</p>
+
+<hr />
+
+<h1 id="binding-functions-to-objects-4">5. Binding functions to objects</h1>
+
+<p>When you call a method while dereferencing it, <code>this</code> is the parent object.</p>
+
+<p>```javascript
+var parent = {
+  foo: function() {
+    return this.bar;
+  },
+  bar: 'blah'
+};</p>
+
+<p>parent.foo(); // =&gt; 'blah'
+```</p>
+
+<hr />
+
+<h1 id="binding-functions-to-objects-5">5. Binding functions to objects</h1>
+
+<p>But if you store a reference to a function in a variable and call it directly,
+then it's <em>unbound</em>.</p>
+
+<p>```javascript
+var parent = {
+  foo: function() {
+    return this.bar;
+  },
+  bar: 'blah'
+};</p>
+
+<p>var foo = parent.foo;
+foo(); // =&gt; undefined
+```</p>
+
+<hr />
+
+<h1 id="binding-functions-to-objects-6">5. Binding functions to objects</h1>
+
+<p>This means you can actually use <code>this</code> in a function where it doesn't make any
+sense, but then attach it to an object so that it <em>does</em> make sense.</p>
+
+<p>```javascript
+var foo = function() {
+  return this.bar;
+};</p>
+
+<p>foo(); // =&gt; undefined</p>
+
+<p>var object = {
+  bar: 'hello'
+};</p>
+
+<p>object.foo = foo;
+object.foo(); // =&gt; 'hello'
+```</p>
+
+<hr />
+
+<h1 id="a-avoid-this-when-youre-starting-out">5a. Avoid <code>this</code> when you're starting out</h1>
+
+<p>Honestly, it's kind of confusing, even to most seasoned JavaScript devs.</p>
+
+<p>The best policy when you're still pretty new to JavaScript would be to just
+avoid using <code>this</code> at all.</p>
+
+<p>This is very easy, actually. For example:</p>
+
+<p>```javascript
+var parent = {
+  foo: function() {
+    return parent.bar;
+  },
+  bar: 'blah'
+};</p>
+
+<p>var foo = parent.foo;
+foo(); // =&gt; 'blah'
+```</p>
+
+<hr />
+
+<h1 id="b-the-new-keyword">5b. The <code>new</code> keyword</h1>
+
+<p>I already talked about this. But in case you care, there is a trick to ensure
+that constructor functions are always used as constructors.</p>
+
+<p>```javascript
+function Person(name) {
+  if (!(this instanceof Person)) {
+    // Tsk tsk, somebody forgot to use the new keyword…
+    return new Person(name);
+  }</p>
+
+<p>// Now this definitely refers to the current Person object rather than
+  // any global state.
+  this.name = name;
+}
+```</p>
+
+<p>It's a bit of a hack, yes. And again, you're probably better off (in the
+beginning) avoiding <code>this</code> altogether.</p>
+
+<hr />
+
+<h1 id="c-call-and-apply">5c. <code>call</code> and <code>apply</code></h1>
+
+<p>You have some control over how <code>this</code> is bound within a function. The <code>call</code> and
+<code>apply</code> methods both let you do this.</p>
+
+<p>```javascript
+function sumOwnValues() {
+  var sum    = 0,
+      values = this.values;</p>
+
+<p>for (var i = 0, len = values.length; i &lt; len; ++i) {
+    sum += values[i];
+  }</p>
+
+<p>return sum;
+}</p>
+
+<p>var object = {
+  values: [1, 2, 3]
+};</p>
+
+<p>sumOwnValues.call(object); // =&gt; 6
+```</p>
+
+<hr />
+
+<h1 id="c-call-and-apply-1">5c. <code>call</code> and <code>apply</code></h1>
+
+<p>The <code>apply</code> function is particularly powerful. It takes an object to bind to
+<code>this</code>, and an array of arguments, and then calls the source function with the
+array passed as its parameters.</p>
+
+<p>(The object can be <code>null</code>, if <code>this</code> isn't important.)</p>
+
+<p>```javascript
+function sum(x, y) {
+  return x + y;
+}</p>
+
+<p>sum.apply(null, [1, 2]); // =&gt; 3
+```</p>
+
+<hr />
+
+<h1 id="c-call-and-apply-2">5c. <code>call</code> and <code>apply</code></h1>
+
+<p>This lets us define function transformations that are completely agnostic of the
+behavior they're modifying.</p>
+
+<p>```javascript
+function reverseArguments(fn) {
+  return function() {
+    Array.prototype.reverse.call(arguments);
+    return fn.apply(this, arguments);
+  };
+}</p>
+
+<p>function concat(str1, str2) {
+  return str1 + str2;
+}</p>
+
+<p>reverseArguments(concat)('foo', 'bar'); // =&gt; 'barfoo';
+```</p>
+
+<hr />
+
+<h1 id="questions">Questions?</h1>
+
+<p>I realize this is an abrupt ending, but I ran out of steam. We can obviously
+always discuss JavaScript more later!</p>
+
+  </body>
 </html>
