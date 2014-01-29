@@ -21,6 +21,9 @@ set :js_dir, 'javascripts'
 
 set :images_dir, 'images'
 
+# This is necessary since the site is hosted at danieltao.com/decks
+set :relative_links, true
+
 # Build-specific configuration
 configure :build do
   # For example, change the Compass output style for deployment
