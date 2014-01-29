@@ -1,5 +1,3 @@
-page '/decks/*', :layout => 'deck'
-
 helpers do
   def decks
     sitemap.resources.select do |resource|
@@ -36,7 +34,9 @@ configure :build do
   activate :relative_assets
 end
 
+
 Dir['source/decks/*.markdown'].each do |file|
   file = File.basename(file, '.markdown')
-  proxy "/raw/#{file}", "decks/#{file}.html", :layout => 'raw'
+  proxy "/#{file}.html", "decks/#{file}.html", :layout => 'deck'
+  proxy "/raw/#{file}.markdown", "decks/#{file}.html", :layout => 'raw'
 end

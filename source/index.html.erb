@@ -11,6 +11,6 @@ title: Decks
 
 <ul>
 <% decks.each do |resource| %>
-  <li><%= link_to(resource.data['title'], resource) %></li>
+  <li><%= link_to(resource.data['title'], File.basename(resource.path)) %></li>
 <% end %>
 </ul>

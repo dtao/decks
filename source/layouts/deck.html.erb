@@ -8,7 +8,7 @@
     <%= javascript_include_tag("deck") %>
 
     <script>
-        Slidedown.fromXHR('../raw/<%= File.basename(current_resource.path, ".html") %>').to('#slides');
+      Slidedown.fromXHR('raw/<%= File.basename(current_resource.path, ".html") %>.markdown').to('#slides');
     </script>
 </head>
 
