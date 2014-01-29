@@ -1,5 +1,3 @@
-page '/', :layout => false
-
 page '/decks/*', :layout => 'deck'
 
 helpers do
