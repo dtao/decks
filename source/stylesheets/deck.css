@@ -28,6 +28,10 @@ body > footer a:hover {
   color: #ffa;
 }
 
+body > footer span {
+  float: right;
+}
+
 body > footer:before {
   position: fixed;
   display: block;

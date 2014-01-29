@@ -21,6 +21,16 @@ body.index > header {
         color: #789;
       }
     }
+
+    small a {
+      color: #777;
+      font-weight: 300;
+      text-decoration: none;
+
+      &:hover {
+        color: #888;
+      }
+    }
   }
 }
 
