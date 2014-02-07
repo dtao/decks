@@ -98,7 +98,7 @@ If we're using a popular library like [Underscore](http://www.underscorejs.org),
 that last JavaScript snippet becomes even simpler:
 
 ```javascript
-var recordIds = records.pluck('recordId');
+var recordIds = _.pluck(records, 'recordId');
 ```
 
 ***
@@ -120,8 +120,18 @@ function pluck(collection, property) {
 # And in Java?
 
 ```java
-class ListHelpers {
-  // TODO: crazy reflection code goes here
+public class ListHelper {
+  @SuppressWarnings("unchecked")
+  public static <E, S> List<E> pluck(List<S> source, Class<S> type, String propertyName) throws NoSuchFieldException, IllegalAccessException {
+    List<E> result = new ArrayList<E>();
+
+    Field field = type.getField(propertyName);
+    for (S item : source) {
+      result.add((E) field.get(item));
+    }
+
+    return result;
+  }
 }
 ```
 
