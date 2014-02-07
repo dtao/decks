@@ -47,24 +47,53 @@
 
 <h1 id="how-about-conciseness">How about conciseness?</h1>
 
-<p>```java
+<p><code>java
 // GUESS WHAT TYPE, COMPILER?
-Object object = new Object();</p>
+Object object = new Object();
+</code></p>
 
-<p>// Java: "Hey, I can do functional programming too!"
-List<string> recordIds = Lists.transform(records, new Function&lt;Record, String&gt; {
-  @Override
-  public String apply(Record record) {
-    return record.getRecordId();
-  }
-});
-```</string></p>
+<p>versus</p>
+
+<p><code>javascript
+var object = {};
+</code></p>
 
 <hr />
 
 <h1 id="how-about-conciseness-1">How about conciseness?</h1>
 
-<p>Incidentally, here's that second snippet in JavaScript:</p>
+<p><code>java
+Map&lt;String, Integer&gt; map = Maps.newHashMap();
+map.put("one", 1);
+map.put("two", 2);
+map.put("three", 3);
+</code></p>
+
+<p>versus</p>
+
+<p><code>javascript
+var map = {
+  one: 1,
+  two: 2,
+  three: 3
+};
+</code></p>
+
+<hr />
+
+<h1 id="how-about-conciseness-2">How about conciseness?</h1>
+
+<p><code>java
+// Java: "Hey, I can do functional programming too!"
+List&lt;String&gt; recordIds = Lists.transform(records, new Function&lt;Record, String&gt; {
+  @Override
+  public String apply(Record record) {
+    return record.getRecordId();
+  }
+});
+</code></p>
+
+<p>versus</p>
 
 <p><code>javascript
 var recordIds = records.map(function(record) {
@@ -72,15 +101,22 @@ var recordIds = records.map(function(record) {
 });
 </code></p>
 
-<p>Or better yet:</p>
+<hr />
+
+<h1 id="incidentally">Incidentally…</h1>
+
+<p>If we're using a popular library like <a href="http://www.underscorejs.org">Underscore</a>,
+that last JavaScript snippet becomes even simpler:</p>
 
 <p><code>javascript
-var recordIds = records.pluck('recordId');
+var recordIds = _.pluck(records, 'recordId');
 </code></p>
 
-<p><em>That's cheating! How would you implement <code>pluck</code>?</em></p>
+<hr />
 
-<p>It's <em>really</em> complicated…</p>
+<h1 id="ok-but">OK, but…</h1>
+
+<p>How might we implement that? It's <em>really</em> complicated…</p>
 
 <p><code>javascript
 function pluck(collection, property) {
@@ -92,7 +128,27 @@ function pluck(collection, property) {
 
 <hr />
 
-<h1 id="who-cares-about-what-a-tool-is-bad-at">Who cares about what a tool is <em>bad</em> at?</h1>
+<h1 id="and-in-java">And in Java?</h1>
+
+<p>```java
+public class ListHelper {
+  @SuppressWarnings("unchecked")
+  public static &lt;E, S&gt; List<e> pluck(List<s> source, Class<s> type, String propertyName) throws NoSuchFieldException, IllegalAccessException {
+    List<e> result = new ArrayList<e>();</e></e></s></s></e></p>
+
+<pre><code>Field field = type.getField(propertyName);
+for (S item : source) {
+  result.add((E) field.get(item));
+}
+
+return result;   } } ```
+</code></pre>
+
+<hr />
+
+<h1 id="who-cares">Who cares?</h1>
+
+<p>Why are we talking about what these tools are <em>bad</em> at?</p>
 
 <ul>
   <li>Tools generally have an intended purpose</li>
@@ -102,25 +158,39 @@ function pluck(collection, property) {
 
 <hr />
 
+<h1 id="static-vs-dynamic-typing">Static vs. dynamic typing</h1>
+
+<hr />
+
 <h1 id="the-value-of-static-typing">The value of static typing</h1>
 
 <p>Statically typed languages help us avoid silly bugs.</p>
 
 <p>```java
 private Customer getCustomer(int customerId) {
-  // logic to get customer
+  // …
 }</p>
 
-<p>getCustomer('1'); // Whoops! Compile error! Thanks, Java!
+<p>// Whoops! Compile error! Thanks, Java!
+getCustomer('1');
 ```</p>
 
 <hr />
 
 <h1 id="the-cost-of-static-typing">The cost of static typing</h1>
 
-<p>This safety comes at a cost. To illustrate let's write some code for a service.</p>
+<p>Of course, in software of any sufficient complexity, we're dealing with more
+than just strings and numbers.</p>
 
-<p>We'll consider these approaches:</p>
+<p>So we create <strong>classes</strong> according to the rules of the type system.</p>
+
+<p>This is necessary. But is it <em>necessarily</em> (always) good?</p>
+
+<hr />
+
+<h1 id="the-cost-of-static-typing-1">The cost of static typing</h1>
+
+<p>Let's write some code for a service. We'll consider these approaches:</p>
 
 <ul>
   <li>Use maps and lists for everything</li>
@@ -131,9 +201,7 @@ private Customer getCustomer(int customerId) {
 
 <hr />
 
-<h1 id="use-maps-and-lists-for-everything">Use maps and lists for everything</h1>
-
-<p>This is a "bad" approach.</p>
+<h1 id="maps-and-lists">Maps and lists</h1>
 
 <p><code>java
 public Map&lt;String, Object&gt; getCustomer(int customerId) {
@@ -146,13 +214,27 @@ public Map&lt;String, Object&gt; getCustomer(int customerId) {
 }
 </code></p>
 
-<p>Ugly, right?</p>
-
-<p>Plus, we have nowhere to put business logic.</p>
+<p>This is a "bad" approach. It's ugly, plus we have nowhere to put business logic.</p>
 
 <hr />
 
-<h1 id="write-a-pojo-class-for-every-type-in-the-domain">Write a POJO class for every type in the domain</h1>
+<h1 id="pojo-classes">POJO classes</h1>
+
+<p>```java
+class Customer {
+  public int id;
+  public String name;
+  public String realName;</p>
+
+<p>// etc.
+}
+```</p>
+
+<p><em>Ack, you can't do that! Public fields are evil!</em></p>
+
+<hr />
+
+<h1 id="oh-sorry">Oh, sorry…</h1>
 
 <p>```java
 class Customer {
@@ -170,12 +252,24 @@ class Customer {
 }
 ```</p>
 
-<p>I guess this is better?</p>
+<p>I guess that's better?</p>
+
+<hr />
+
+<h1 id="pojo-classes-1">POJO classes</h1>
+
+<p>```java
+public String getName() {
+  return this.name;
+}</p>
+
+<p>// etc.
+```</p>
 
 <p>At least we have type checking on the customer's properties now. Also, we can
 add business logic to this class.</p>
 
-<p>But that's a lot of boilerplate. Also, for serializing we may want to convert
+<p>But that's a lot of <strong>boilerplate</strong>. Also, for serializing we may want to convert
 this to a map anyway…</p>
 
 <p>Yeah, for certain formats would could just use a library (e.g., Gson for JSON).
@@ -183,16 +277,13 @@ But then that's another dependency. But oh well.</p>
 
 <hr />
 
-<h1 id="generate-client-libraries-using-a-framework">Generate client libraries using a framework</h1>
+<h1 id="generated-client-libraries">Generated client libraries</h1>
 
-<p>This is great! This way we'll have code generated <em>for</em> us, saving on
-boilerplate!</p>
+<p>This is great! This way we'll have code generated <em>for</em> us, cutting out boilerplate!</p>
 
-<p>Right?</p>
+<p>Well, except for the schema…</p>
 
-<p>Oh wait…</p>
-
-<p><code>protobuf
+<p><code>javascript
 message CustomerInfoPB {
   optional int64 id = 1;
   optional string name = 2;
@@ -201,12 +292,12 @@ message CustomerInfoPB {
 }
 </code></p>
 
-<p>Plus this puts us back where we were with nowhere to put business logic (since
-we can't modify the generated <code>CustomerInfoPB</code> class).</p>
+<p>But then this puts us back where we were with nowhere to put business logic
+(since we can't modify the generated <code>CustomerInfoPB</code> class).</p>
 
 <hr />
 
-<h1 id="write-wrappers-around-client-libraries-for-additional-functionality">Write wrappers around client libraries for additional functionality</h1>
+<h1 id="wrappers-around-client-libraries">Wrappers around client libraries</h1>
 
 <p>Ah, <em>this</em> is the holy grail. We get serialization support through the
 auto-generated client library, and we can add business logic to our wrapper
@@ -216,12 +307,8 @@ classes.</p>
 class Customer {
   private CustomerInfoPB info;</p>
 
-<p>public Customer(CustomerInfoPB) {
+<p>public Customer(CustomerInfoPB info) {
     this.info = info;
-  }</p>
-
-<p>public CustomerInfoPB getInfo() {
-    return this.info;
   }</p>
 
 <p>// business logic goes here!
@@ -235,22 +322,17 @@ dependencies.</strong></p>
 
 <h1 id="the-value-of-dynamic-typing">The value of dynamic typing</h1>
 
-<p>```javascript
-var service = {
-  getCustomer: function() {
-    return {
-      id: 1,
-      name: 'joe',
-      real_name: 'Joe Schmoe',
-      email_address: 'joe@example.com'
-    };
-  }
-};</p>
-
-<p>// Look ma, no classes!
-var customer = service.getCustomer();
-customer.name; // =&gt; 'joe'
-```</p>
+<p><code>javascript
+function getCustomer() {
+  // Look ma, no classes!
+  return {
+    id: 1,
+    name: 'joe',
+    real_name: 'Joe Schmoe',
+    email_address: 'joe@example.com'
+  };
+}
+</code></p>
 
 <p>Easy to read, easy to serialize, easy to add business logic.</p>
 
@@ -259,14 +341,12 @@ customer.name; // =&gt; 'joe'
 <h1 id="the-cost-of-dynamic-typing">The cost of dynamic typing</h1>
 
 <p>```javascript
-var service = {
-  getCustomer: function(id) {
-    return customers[id];
-  }
+function getCustomer(id) {
+  return customers[id];
 };</p>
 
-<p>// Oh right, forgot to pass in id…
-service.getCustomer(); // =&gt; undefined
+<p>// Whoops, forgot to pass in the id param…
+var customer = getCustomer(); // =&gt; undefined
 ```</p>
 
 <p>We can make silly mistakes again. The horror!</p>

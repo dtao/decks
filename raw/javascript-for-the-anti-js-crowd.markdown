@@ -35,7 +35,40 @@ JavaScript for the anti-JS crowd
 ```java
 // GUESS WHAT TYPE, COMPILER?
 Object object = new Object();
+```
 
+versus
+
+```javascript
+var object = {};
+```
+
+***
+
+# How about conciseness?
+
+```java
+Map<String, Integer> map = Maps.newHashMap();
+map.put("one", 1);
+map.put("two", 2);
+map.put("three", 3);
+```
+
+versus
+
+```javascript
+var map = {
+  one: 1,
+  two: 2,
+  three: 3
+};
+```
+
+***
+
+# How about conciseness?
+
+```java
 // Java: "Hey, I can do functional programming too!"
 List<String> recordIds = Lists.transform(records, new Function<Record, String> {
   @Override
@@ -45,11 +78,7 @@ List<String> recordIds = Lists.transform(records, new Function<Record, String> {
 });
 ```
 
-***
-
-# How about conciseness?
-
-Incidentally, here's that second snippet in JavaScript:
+versus
 
 ```javascript
 var recordIds = records.map(function(record) {
@@ -57,15 +86,22 @@ var recordIds = records.map(function(record) {
 });
 ```
 
-Or better yet:
+***
+
+# Incidentally...
+
+If we're using a popular library like [Underscore](http://www.underscorejs.org),
+that last JavaScript snippet becomes even simpler:
 
 ```javascript
-var recordIds = records.pluck('recordId');
+var recordIds = _.pluck(records, 'recordId');
 ```
 
-*That's cheating! How would you implement `pluck`?*
+***
 
-It's *really* complicated...
+# OK, but...
+
+How might we implement that? It's *really* complicated...
 
 ```javascript
 function pluck(collection, property) {
@@ -77,11 +113,37 @@ function pluck(collection, property) {
 
 ***
 
-# Who cares about what a tool is *bad* at?
+# And in Java?
+
+```java
+public class ListHelper {
+  @SuppressWarnings("unchecked")
+  public static <E, S> List<E> pluck(List<S> source, Class<S> type, String propertyName) throws NoSuchFieldException, IllegalAccessException {
+    List<E> result = new ArrayList<E>();
+
+    Field field = type.getField(propertyName);
+    for (S item : source) {
+      result.add((E) field.get(item));
+    }
+
+    return result;
+  }
+}
+```
+
+***
+
+# Who cares?
+
+Why are we talking about what these tools are *bad* at?
 
 - Tools generally have an intended purpose
 - Java prioritizes *safety*
 - JavaScript prioritizes *productivity*
+
+***
+
+# Static vs. dynamic typing
 
 ***
 
@@ -91,19 +153,29 @@ Statically typed languages help us avoid silly bugs.
 
 ```java
 private Customer getCustomer(int customerId) {
-  // logic to get customer
+  // ...
 }
 
-getCustomer('1'); // Whoops! Compile error! Thanks, Java!
+// Whoops! Compile error! Thanks, Java!
+getCustomer('1');
 ```
 
 ***
 
 # The cost of static typing
 
-This safety comes at a cost. To illustrate let's write some code for a service.
+Of course, in software of any sufficient complexity, we're dealing with more
+than just strings and numbers.
 
-We'll consider these approaches:
+So we create **classes** according to the rules of the type system.
+
+This is necessary. But is it *necessarily* (always) good?
+
+***
+
+# The cost of static typing
+
+Let's write some code for a service. We'll consider these approaches:
 
 - Use maps and lists for everything
 - Write a POJO class for every type in the domain
@@ -112,9 +184,7 @@ We'll consider these approaches:
 
 ***
 
-# Use maps and lists for everything
-
-This is a "bad" approach.
+# Maps and lists
 
 ```java
 public Map<String, Object> getCustomer(int customerId) {
@@ -127,13 +197,27 @@ public Map<String, Object> getCustomer(int customerId) {
 }
 ```
 
-Ugly, right?
-
-Plus, we have nowhere to put business logic.
+This is a "bad" approach. It's ugly, plus we have nowhere to put business logic.
 
 ***
 
-# Write a POJO class for every type in the domain
+# POJO classes
+
+```java
+class Customer {
+  public int id;
+  public String name;
+  public String realName;
+
+  // etc.
+}
+```
+
+*Ack, you can't do that! Public fields are evil!*
+
+***
+
+# Oh, sorry...
 
 ```java
 class Customer {
@@ -151,12 +235,24 @@ class Customer {
 }
 ```
 
-I guess this is better?
+I guess that's better?
+
+***
+
+# POJO classes
+
+```java
+public String getName() {
+  return this.name;
+}
+
+// etc.
+```
 
 At least we have type checking on the customer's properties now. Also, we can
 add business logic to this class.
 
-But that's a lot of boilerplate. Also, for serializing we may want to convert
+But that's a lot of **boilerplate**. Also, for serializing we may want to convert
 this to a map anyway...
 
 Yeah, for certain formats would could just use a library (e.g., Gson for JSON).
@@ -164,16 +260,13 @@ But then that's another dependency. But oh well.
 
 ***
 
-# Generate client libraries using a framework
+# Generated client libraries
 
-This is great! This way we'll have code generated *for* us, saving on
-boilerplate!
+This is great! This way we'll have code generated *for* us, cutting out boilerplate!
 
-Right?
+Well, except for the schema...
 
-Oh wait...
-
-```protobuf
+```javascript
 message CustomerInfoPB {
   optional int64 id = 1;
   optional string name = 2;
@@ -182,12 +275,12 @@ message CustomerInfoPB {
 }
 ```
 
-Plus this puts us back where we were with nowhere to put business logic (since
-we can't modify the generated `CustomerInfoPB` class).
+But then this puts us back where we were with nowhere to put business logic
+(since we can't modify the generated `CustomerInfoPB` class).
 
 ***
 
-# Write wrappers around client libraries for additional functionality
+# Wrappers around client libraries
 
 Ah, *this* is the holy grail. We get serialization support through the
 auto-generated client library, and we can add business logic to our wrapper
@@ -197,12 +290,8 @@ classes.
 class Customer {
   private CustomerInfoPB info;
 
-  public Customer(CustomerInfoPB) {
+  public Customer(CustomerInfoPB info) {
     this.info = info;
-  }
-
-  public CustomerInfoPB getInfo() {
-    return this.info;
   }
 
   // business logic goes here!
@@ -217,20 +306,15 @@ dependencies.**
 # The value of dynamic typing
 
 ```javascript
-var service = {
-  getCustomer: function() {
-    return {
-      id: 1,
-      name: 'joe',
-      real_name: 'Joe Schmoe',
-      email_address: 'joe@example.com'
-    };
-  }
-};
-
-// Look ma, no classes!
-var customer = service.getCustomer();
-customer.name; // => 'joe'
+function getCustomer() {
+  // Look ma, no classes!
+  return {
+    id: 1,
+    name: 'joe',
+    real_name: 'Joe Schmoe',
+    email_address: 'joe@example.com'
+  };
+}
 ```
 
 Easy to read, easy to serialize, easy to add business logic.
@@ -240,14 +324,12 @@ Easy to read, easy to serialize, easy to add business logic.
 # The cost of dynamic typing
 
 ```javascript
-var service = {
-  getCustomer: function(id) {
-    return customers[id];
-  }
+function getCustomer(id) {
+  return customers[id];
 };
 
-// Oh right, forgot to pass in id...
-service.getCustomer(); // => undefined
+// Whoops, forgot to pass in the id param...
+var customer = getCustomer(); // => undefined
 ```
 
 We can make silly mistakes again. The horror!
